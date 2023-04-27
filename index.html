@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<title></title>
+		<style type="text/css">
+			*{
+				margin: 0;
+				padding: 0;
+				/*禁止选中文字*/
+				-moz-user-select: none;
+				-ms-user-select: none;
+				-o-user-select: none;
+				user-select: none;
+			}
+			body{
+				text-align: center;
+			}
+			h1{
+				padding: 30px ;
+			}
+			.start{
+				margin: 30px;
+			}
+			.obox{
+				height: 500px;
+				width: 60%;
+				border: solid 1px black;
+				margin: 0 auto;
+				position: relative;
+				top: 0px;
+				/*animation: oboxalt 0.25s linear 4;*/
+			}
+			@keyframes oboxalt{
+				0%{top: 0px;}
+				25%{top: 5px;}
+				50%{top: 0px;}
+				75%{top: -5px;}
+				100%{top: 0px;}
+			}
+			.aside{
+				width: 120px;
+				background: rgb(255,160,0);
+				position: absolute;
+				left: -121px;
+				top: -1px;
+				padding: 20px 0px;
+			}
+			.aside span{
+				display: block;
+				
+			}
+			.active{
+				width:24px ;
+				height: 24px;
+				position: absolute;
+				top: 0px;
+				left: 0px;
+			}
+			.pop_up{
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100vh;
+				background: rgba(0,0,0,0.5);
+				justify-content: center;
+				align-items: center;
+				display: none;
+			}
+			.pop_up>div{
+				background: white;
+				width: 300px;
+				border-radius: 10px;
+				padding: 40px 0px;
+			}
+			.pop_up h3{
+				font-size: 50px;
+			}
+			.pop_up button{
+				background: rgb(0,132,40);
+				color: white;
+				padding: 5px 10px;
+				border: none;
+				border-radius: 5px;
+				margin: 30px 10px 0px;
+			}
+			@media  screen  and (max-width: 640px) {
+				h1{
+					padding: 20px;
+				}
+				.start{
+					margin: 10px 0px 40px;
+				}
+				.aside{
+					height: 30px;
+					top: -31px;
+					line-height: 30px;
+					padding: 0;
+					width: 100%;
+					left: 0px;
+				}
+				.aside span{
+					display: inline;
+				}
+				.obox{
+					width: 90%;
+				}
+			}
+			.box{
+				width: 100px;
+				height: 100px;
+				position: fixed;
+				top: -200px;
+				left: -200px;
+			}
+		</style>
+		<script type="text/javascript">
+			window.onload = function(){
+				var start = document.querySelector(".start");
+				var obox = document.querySelector(".obox");
+				var getscore = document.querySelector(".getscore");
+				var lostscore = document.querySelector(".lostscore");
+				var pop_up = document.querySelector(".pop_up");
+				var make = document.querySelector(".make");
+				var goOn = document.querySelector(".goOn");
+				var box = document.querySelector(".box");
+				var speed = 1;//速度随着游戏时长变快，每30s速度就加一
+				var speedX = 1;
+				var n1 = 0;//得分
+				var n2 = 0;//失分
+				var startTime = 0;
+				var newTime = 0;
+				//提前加载图片
+				for(var i=1;i<=52;i++){
+					var img = document.createElement("img");
+					img.src = 'qq/'+i+".gif";
+					box.appendChild(img);
+				}
+				//开始游戏
+				start.onclick = function(){
+					start.setAttribute("disabled","disabled");
+					start.innerHTML = "游戏正在进行中";
+					var d = new Date();
+					startTime = d.valueOf();
+					creatImg();
+					
+				}
+				//随机出现一个QQ表情，然后掉落
+				function creatImg(){
+					obox.style.animation = "none";
+					var img = document.createElement("img");
+					img.setAttribute("draggable",false);
+					img.src="qq/"+Math.ceil(Math.random()*50)+".gif";
+					obox.appendChild(img);
+					img.className="active";
+					img.style.left = Math.floor(Math.random()*(obox.clientWidth-img.offsetWidth))+"px";
+					var d1 = new Date();
+					newTime = d1.valueOf();
+					console.log(newTime+","+startTime+","+Math.ceil((newTime-startTime)/5000))
+					speed = Math.ceil((newTime-startTime)/30000+0.01);
+					console.log(speed);
+					//图片掉落
+					var timer = setInterval(function(){
+						var y = img.offsetTop;
+						img.style.top = y+speed+"px";
+						//碰到底部
+						if(img.offsetTop+img.offsetHeight>=obox.offsetHeight){
+							img.onclick=null;
+							n2++;
+							lostscore.innerHTML = "失分："+n2+"分";
+							clearInterval(timer);
+							img.style.top = obox.offsetHeight-img.offsetHeight-1+"px";
+							img.src="qq/51.gif";
+							obox.style.animation = "oboxalt 0.25s linear 4";
+							setTimeout(function(){
+								if(n2==5){
+									//游戏结束
+									pop_up.style.display="flex";
+								}else{
+									obox.removeChild(img);
+									creatImg();
+								}
+							},1000)
+						}
+					},20)
+					//点击变猪头
+					img.onclick = function(){
+						img.onclick = null;
+						img.src="qq/52.gif";
+						clearInterval(timer);
+						var x = img.offsetLeft;
+						//图片左右晃动
+						var timer2 = setInterval(function(){
+							var x1 = img.offsetLeft;
+							if(Math.abs(x-x1)>=5){
+								speedX*=-1;
+							}
+							img.style.left = x1+speedX+"px";
+						},10)
+						//晃动一秒后消失
+						setTimeout(function(){
+							clearInterval(timer2);
+							obox.removeChild(img);
+							creatImg();
+							n1++;
+							getscore.innerHTML = "得分："+n1+"分";
+						},1000)
+					}
+				}
+				//确定
+				make.onclick = function(){
+					pop_up.style.display="none";
+					start.removeAttribute("disabled");
+					start.innerHTML = "开始游戏";
+					n1=0;
+					n2=0;
+					lostscore.innerHTML = "失分："+n2+"分";
+					getscore.innerHTML = "得分："+n1+"分";
+					obox.removeChild(obox.querySelector("img"));
+				}
+				//继续游戏
+				goOn.onclick = function(){
+					pop_up.style.display="none";
+					n2=0;
+					lostscore.innerHTML = "失分："+n2+"分";
+					obox.removeChild(obox.querySelector("img"));
+					var d = new Date();
+					startTime = d.valueOf();
+					creatImg();
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<div class="box"></div>
+		<h1>你的鼠标有多块？</h1>
+		<p>游戏说明：点击“开始游戏”，随机掉下QQ表情，点中它，千万别让它掉下去!!!</p>
+		<button class="start">开始游戏</button>
+		<div class="obox">
+			<div class="aside">
+				<span class="getscore">得分：0分</span>
+				<span class="lostscore">失分：0分</span>
+			</div>
+		</div>
+		<div class="pop_up">
+			<div>
+				<h3>游戏结束</h3>
+				<button class="make">确定</button>
+				<button class="goOn">继续游戏</button>
+			</div>
+		</div>
+	</body>
+</html>
